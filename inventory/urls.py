@@ -7,7 +7,7 @@ router = DefaultRouter()
 # router.register(r'tools_movements', ToolsInventoryMovementViewSet)
 
 
-router.register(r'items', InventoryItemViewSet)
+router.register(r'items', InventoryItemViewSet, basename='inventory-item')
 router.register(r'items_movements', InventoryItemMovementViewSet)
 
 urlpatterns = [

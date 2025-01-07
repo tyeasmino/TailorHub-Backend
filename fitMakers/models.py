@@ -13,6 +13,8 @@ class Service(models.Model):
 
 class FitMaker(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE) # shop name 
+    balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    fabric_profit = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     image = models.URLField(max_length=255, blank=True, null=True)
 
     # company details

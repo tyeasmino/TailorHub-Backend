@@ -28,9 +28,6 @@ class DressMeasurement(models.Model):
         return f"{self.dress_type.name} Measurements for {self.fit_finder.user}"
 
     def is_valid_for_dress_type(self):
-        """
-        Validates required fields for each dress type.
-        """
         if self.dress_type.name == "Shirt":
             if not all([self.dress_long, self.chest_or_hip, self.hand_pocket_length, self.hand_pant_start, self.hand_pant_end, self.neckband]):
                 return False

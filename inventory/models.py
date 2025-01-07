@@ -64,7 +64,8 @@ class InventoryItem(models.Model):
 
     fitmaker = models.ForeignKey(FitMaker, on_delete=models.CASCADE)  
     item_type = models.CharField(max_length=50, choices=ITEM_TYPE_CHOICES)
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100) 
+    purchase_price_per_unit=models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     image = models.URLField(max_length=255, blank=True, null=True)
     stock = models.IntegerField(default=0)
     color = models.CharField(max_length=50, blank=True, null=True) 
@@ -88,31 +89,42 @@ class InventoryItemMovement(models.Model):
         return f"{self.movement_type} {self.quantity} {self.inventory_item.name} on {self.date}"
 
     @staticmethod
-    def create_movement(inventory_item, quantity, movement_type, description=""):
+    def create_movement(fitmaker, inventory_item, quantity, movement_type, description=""):
         # Ensure the movement type is either "Add" or "Use"
         if movement_type not in ['Add', 'Use']:
             raise ValueError("Invalid movement type. It should be 'Add' or 'Use'.")
 
-        # Check if stock is sufficient for 'Use' movement
-        if movement_type == "Use" and inventory_item.stock < quantity:
-            raise ValueError("Not enough stock available to use.")  # Prevent creating the movement if stock is insufficient
+        if movement_type == "Use":
+            # Check if stock is sufficient for 'Use' movement
+            if inventory_item.stock < quantity:
+                raise ValueError("Not enough stock available to use.")  # Prevent creating the movement if stock is insufficient
 
-        # Create the movement if it's valid
+            # After validation, decrease stock for the "Use" movement (sale)
+            inventory_item.stock -= quantity
+
+        elif movement_type == "Add":
+            # Check if the FitMaker has enough balance to purchase the stock
+            total_cost = inventory_item.purchase_price_per_unit * quantity
+            if fitmaker.balance < total_cost:
+                raise ValueError("Insufficient balance to purchase items.")
+
+            # After validation, increase stock for the "Add" movement (purchase)
+            inventory_item.stock += quantity
+
+            # Deduct the total purchase cost from FitMaker's balance
+            fitmaker.balance -= total_cost
+
+        # Save the updated inventory item and FitMaker balance
+        inventory_item.save()
+        fitmaker.save()
+
+        # Create the inventory movement record
         movement = InventoryItemMovement.objects.create(
             inventory_item=inventory_item,
             quantity=quantity,
             movement_type=movement_type,
             description=description
         )
-
-        # Update stock based on the movement type
-        if movement_type == "Add":
-            inventory_item.stock += quantity  # Increase stock for "Add"
-        elif movement_type == "Use":
-            inventory_item.stock -= quantity  # Decrease stock for "Use"
-
-        # Save the updated inventory item
-        inventory_item.save()
 
         return movement
 

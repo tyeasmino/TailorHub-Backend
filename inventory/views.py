@@ -1,8 +1,10 @@
 from rest_framework import status
 from rest_framework import viewsets
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import ToolsInventory, ToolsInventoryMovement, InventoryItem, InventoryItemMovement
 from fitMakers.models import FitMaker
+from rest_framework.exceptions import NotFound
 from .serializers import ToolsInventorySerializer, ToolsInventoryMovementSerializer, InventoryItemSerializer, InventoryItemMovementSerializer
 
 class ToolsInventoryViewSet(viewsets.ModelViewSet):
@@ -132,45 +134,78 @@ class ToolsInventoryMovementViewSet(viewsets.ModelViewSet):
         })
 
     
-
 class InventoryItemViewSet(viewsets.ModelViewSet):
-    queryset = InventoryItem.objects.all()
+    permission_classes = [IsAuthenticated]
     serializer_class = InventoryItemSerializer
 
+    # Define the default queryset
+    queryset = InventoryItem.objects.all()
+
     def get_queryset(self):
-        queryset = super().get_queryset()
- 
+        """
+        This view should return a list of all the inventory items
+        that are related to the currently authenticated user's FitMaker.
+        """
+        # Get the authenticated user's fitmaker
+        try:
+            fitmaker = self.request.user.fitmaker
+        except AttributeError:
+            raise NotFound("FitMaker not found for the authenticated user.")
+
+        # Filter InventoryItems by the fitmaker of the authenticated user
+        queryset = InventoryItem.objects.filter(fitmaker=fitmaker)
+
+        # Additional filters based on query parameters
         item_type = self.request.query_params.get('item_type', None)
         if item_type is not None:
             queryset = queryset.filter(item_type=item_type)
-
-        fitmaker_id = self.request.query_params.get('fitmaker', None)
-        if fitmaker_id is not None:
-            queryset = queryset.filter(fitmaker_id=fitmaker_id)
 
         return queryset
 
 
 
+
 class InventoryItemMovementViewSet(viewsets.ModelViewSet):
-    queryset = InventoryItemMovement.objects.all()  
+    queryset = InventoryItemMovement.objects.all()  # Default queryset
     serializer_class = InventoryItemMovementSerializer
 
     def get_queryset(self):
-        queryset = super().get_queryset()
+        """
+        Get the list of inventory item movements filtered by the logged-in user's FitMaker.
+        Only movements for the authenticated user's FitMaker will be returned.
+        """
+        # Get the authenticated user's FitMaker
+        fitmaker = FitMaker.objects.filter(user=self.request.user).first()
 
+        # If no FitMaker exists for the user, return an empty queryset
+        if not fitmaker:
+            return InventoryItemMovement.objects.none()
+
+        # Filter InventoryItemMovements by the logged-in user's FitMaker
+        queryset = InventoryItemMovement.objects.filter(inventory_item__fitmaker=fitmaker)
+
+        # Additional filters based on query parameters (optional)
         inventory_item_id = self.request.query_params.get('inventory_item', None)
         category = self.request.query_params.get('category', None)
 
         if inventory_item_id is not None:
             queryset = queryset.filter(inventory_item_id=inventory_item_id)
-        
+
         if category is not None:
-            queryset = queryset.filter(category__icontains=category)
+            queryset = queryset.filter(inventory_item__category__icontains=category)
 
         return queryset
 
     def create(self, request, *args, **kwargs):
+        """
+        Handle the creation of an inventory item movement. Ensure the item belongs to the logged-in user's FitMaker.
+        """
+        # Get the FitMaker for the authenticated user
+        fitmaker = FitMaker.objects.filter(user=request.user).first()
+
+        if not fitmaker:
+            return Response({"detail": "FitMaker not found."}, status=status.HTTP_400_BAD_REQUEST)
+
         inventory_item_id = request.data.get('inventory_item')
         quantity = request.data.get('quantity')
         movement_type = request.data.get('movement_type')
@@ -182,14 +217,16 @@ class InventoryItemMovementViewSet(viewsets.ModelViewSet):
         except ValueError:
             return Response({"detail": "'quantity' must be an integer."}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Find the inventory item
-        inventory_item = InventoryItem.objects.filter(id=inventory_item_id).first()
+        # Find the inventory item, ensuring it belongs to the logged-in user's fitmaker
+        inventory_item = InventoryItem.objects.filter(id=inventory_item_id, fitmaker=fitmaker).first()
+
         if not inventory_item:
-            return Response({"detail": "Inventory item not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response({"detail": "Inventory item not found or doesn't belong to the authenticated user."}, status=status.HTTP_404_NOT_FOUND)
 
         # Handle the movement and ensure stock is updated correctly
         try:
             movement = InventoryItemMovement.create_movement(
+                fitmaker=fitmaker,  # Pass the fitmaker here
                 inventory_item=inventory_item,
                 quantity=quantity,
                 movement_type=movement_type,
@@ -202,7 +239,4 @@ class InventoryItemMovementViewSet(viewsets.ModelViewSet):
         return Response({
             "detail": f"Stock updated for {inventory_item.name}. New stock: {inventory_item.stock}",
             "movement": self.get_serializer(movement).data
-        })        
-
-
-        
+        })
