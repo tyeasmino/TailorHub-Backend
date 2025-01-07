@@ -66,6 +66,7 @@ class InventoryItem(models.Model):
     item_type = models.CharField(max_length=50, choices=ITEM_TYPE_CHOICES)
     name = models.CharField(max_length=100) 
     purchase_price_per_unit=models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    sell_price_per_unit=models.DecimalField(max_digits=10, decimal_places=2, default=0.00)    
     image = models.URLField(max_length=255, blank=True, null=True)
     stock = models.IntegerField(default=0)
     color = models.CharField(max_length=50, blank=True, null=True) 
@@ -94,10 +95,28 @@ class InventoryItemMovement(models.Model):
         if movement_type not in ['Add', 'Use']:
             raise ValueError("Invalid movement type. It should be 'Add' or 'Use'.")
 
+        # Process the "Use" (sale) movement
         if movement_type == "Use":
-            # Check if stock is sufficient for 'Use' movement
+            # Check if stock is sufficient for the "Use" movement (sale)
             if inventory_item.stock < quantity:
                 raise ValueError("Not enough stock available to use.")  # Prevent creating the movement if stock is insufficient
+
+            # Calculate the profit for the "Use" movement (sale)
+            # Profit = (Sell price - Purchase price) * Quantity
+            profit_per_item = inventory_item.sell_price_per_unit - inventory_item.purchase_price_per_unit
+            if profit_per_item < 0:
+                raise ValueError("Selling price must be greater than purchase price to make a profit.")
+
+            total_profit = profit_per_item * quantity
+
+            # Add the profit to the FitMaker's fabric_profit
+            fitmaker.fabric_profit += total_profit
+
+            # Calculate the total sale value (for balance update)
+            total_sale_value = inventory_item.sell_price_per_unit * quantity
+
+            # Increase the fitmaker's balance with the sale value (not decrease)
+            fitmaker.balance += total_sale_value
 
             # After validation, decrease stock for the "Use" movement (sale)
             inventory_item.stock -= quantity

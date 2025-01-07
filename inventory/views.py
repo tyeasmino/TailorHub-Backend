@@ -6,6 +6,9 @@ from .models import ToolsInventory, ToolsInventoryMovement, InventoryItem, Inven
 from fitMakers.models import FitMaker
 from rest_framework.exceptions import NotFound
 from .serializers import ToolsInventorySerializer, ToolsInventoryMovementSerializer, InventoryItemSerializer, InventoryItemMovementSerializer
+from decimal import Decimal
+
+
 
 class ToolsInventoryViewSet(viewsets.ModelViewSet):
     queryset = ToolsInventory.objects.all()
@@ -165,6 +168,9 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
 
 
 
+
+
+
 class InventoryItemMovementViewSet(viewsets.ModelViewSet):
     queryset = InventoryItemMovement.objects.all()  # Default queryset
     serializer_class = InventoryItemMovementSerializer
@@ -240,3 +246,6 @@ class InventoryItemMovementViewSet(viewsets.ModelViewSet):
             "detail": f"Stock updated for {inventory_item.name}. New stock: {inventory_item.stock}",
             "movement": self.get_serializer(movement).data
         })
+
+
+ 
