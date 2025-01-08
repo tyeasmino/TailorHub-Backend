@@ -54,8 +54,6 @@ class ToolsInventoryMovement(models.Model):
 
 
 
-
-
 class InventoryItem(models.Model):
     ITEM_TYPE_CHOICES = [
         ('Tool', 'Tool'),
@@ -91,53 +89,35 @@ class InventoryItemMovement(models.Model):
 
     @staticmethod
     def create_movement(fitmaker, inventory_item, quantity, movement_type, description=""):
-        # Ensure the movement type is either "Add" or "Use"
         if movement_type not in ['Add', 'Use']:
             raise ValueError("Invalid movement type. It should be 'Add' or 'Use'.")
 
-        # Process the "Use" (sale) movement
+       
         if movement_type == "Use":
-            # Check if stock is sufficient for the "Use" movement (sale)
             if inventory_item.stock < quantity:
-                raise ValueError("Not enough stock available to use.")  # Prevent creating the movement if stock is insufficient
+                raise ValueError("Not enough stock available to use.")  
 
-            # Calculate the profit for the "Use" movement (sale)
-            # Profit = (Sell price - Purchase price) * Quantity
             profit_per_item = inventory_item.sell_price_per_unit - inventory_item.purchase_price_per_unit
             if profit_per_item < 0:
                 raise ValueError("Selling price must be greater than purchase price to make a profit.")
 
             total_profit = profit_per_item * quantity
-
-            # Add the profit to the FitMaker's fabric_profit
             fitmaker.fabric_profit += total_profit
-
-            # Calculate the total sale value (for balance update)
             total_sale_value = inventory_item.sell_price_per_unit * quantity
-
-            # Increase the fitmaker's balance with the sale value (not decrease)
             fitmaker.balance += total_sale_value
-
-            # After validation, decrease stock for the "Use" movement (sale)
             inventory_item.stock -= quantity
 
         elif movement_type == "Add":
-            # Check if the FitMaker has enough balance to purchase the stock
             total_cost = inventory_item.purchase_price_per_unit * quantity
             if fitmaker.balance < total_cost:
                 raise ValueError("Insufficient balance to purchase items.")
 
-            # After validation, increase stock for the "Add" movement (purchase)
             inventory_item.stock += quantity
-
-            # Deduct the total purchase cost from FitMaker's balance
             fitmaker.balance -= total_cost
 
-        # Save the updated inventory item and FitMaker balance
         inventory_item.save()
         fitmaker.save()
 
-        # Create the inventory movement record
         movement = InventoryItemMovement.objects.create(
             inventory_item=inventory_item,
             quantity=quantity,

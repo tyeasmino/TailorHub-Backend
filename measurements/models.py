@@ -5,6 +5,7 @@ from fitFinders.models import FitFinder
 # DressType Model
 class DressType(models.Model):
     name = models.CharField(max_length=50)   
+    sell_price_per_unit=models.DecimalField(max_digits=10, decimal_places=2, default=0.00)    
     slug = models.SlugField(max_length=60)
     icon = models.CharField(max_length=20, blank=True, null=True) 
     description = models.TextField(blank=True, null=True)

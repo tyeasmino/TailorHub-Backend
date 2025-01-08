@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'fitMakers',
     'inventory',
     'measurements',
+    'orders',
 ]
 
 
