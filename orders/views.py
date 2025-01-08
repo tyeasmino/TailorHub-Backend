@@ -9,13 +9,28 @@ from inventory.models import InventoryItem
 from measurements.models import DressType
 from fitFinders.models import FitFinder
 from fitMakers.models import FitMaker
-
+from rest_framework.permissions import IsAuthenticated
 
 
 # Create your views here.
-class OrderViewSet(viewsets.ModelViewSet):
-    queryset = Order.objects.all()
+class OrderViewSet(viewsets.ModelViewSet): 
     serializer_class = OrderSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user   
+
+        if hasattr(user, 'fitmaker'):   
+            fit_maker = user.fitmaker   
+            return Order.objects.filter(fit_maker=fit_maker)   
+        
+        if hasattr(user, 'fitfinder'):   
+            fit_finder = user.fitfinder  
+            return Order.objects.filter(fit_finder=fit_finder)   
+
+        return Order.objects.none()  
+
+
 
     def create(self, request, *args, **kwargs):
         fabric_id = request.data.get('fabric')  # fabric ID from the frontend
@@ -49,30 +64,36 @@ class OrderViewSet(viewsets.ModelViewSet):
 @api_view(['PATCH'])
 def update_order_status(request, order_id):
     try:
+        # Retrieve the order using the order_id
         order = Order.objects.get(order_id=order_id)
     except Order.DoesNotExist:
         return Response({"detail": "Order not found."}, status=status.HTTP_404_NOT_FOUND)
 
-    # Check if the status is being updated to 'Completed'
-    if 'order_status' in request.data and request.data['order_status'] == 'Completed':
+    # Check if the 'order_status' is present in the request data
+    if 'order_status' not in request.data:
+        return Response({"detail": "Order status is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+    new_status = request.data['order_status']
+    
+    # Validate that the new status is one of the valid choices
+    if new_status not in ['Processing', 'Completed', 'Delivered']:
+        return Response({"detail": "Invalid status."}, status=status.HTTP_400_BAD_REQUEST)
+
+    # Handle the "Completed" status update
+    if new_status == 'Completed':
         fabric = order.fabric  # Get the fabric for this order
-        if fabric.stock <= 0:  # Check if the fabric stock is available
+        
+        # Check if the fabric stock is available
+        if fabric.stock <= 0:
             return Response({"detail": "Insufficient fabric stock to complete the order."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        # If stock is sufficient, reduce the fabric stock by 1
+        fabric.stock -= 1  # Decrease fabric stock by 1
+        fabric.save()  # Save the updated fabric stock
 
-    # If the new status is valid, update it
-    if 'order_status' in request.data:
-        new_status = request.data['order_status']
-        if new_status not in ['Processing', 'Completed', 'Delivered']:
-            return Response({"detail": "Invalid status."}, status=status.HTTP_400_BAD_REQUEST)
+    # Update the order status
+    order.order_status = new_status
+    order.save()  # Save the updated order
 
-        # Update the order status
-        order.order_status = new_status
-
-        # If the order is marked as completed, inventory will automatically update due to the save method
-        if new_status == 'Completed':
-            order.save()
-
-        return Response({"detail": f"Order status updated to {new_status}."}, status=status.HTTP_200_OK)
-
-    return Response({"detail": "Order status is required."}, status=status.HTTP_400_BAD_REQUEST)
-
+    # Return a success response
+    return Response({"detail": f"Order status updated to {new_status}."}, status=status.HTTP_200_OK)
