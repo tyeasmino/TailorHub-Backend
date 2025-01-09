@@ -62,14 +62,22 @@ class OrderViewSet(viewsets.ModelViewSet):
     
 
 @api_view(['PATCH'])
-def update_order_status(request, order_id):
+def update_order_status(request, id):  # Use `id` here
     try:
-        # Retrieve the order using the order_id
-        order = Order.objects.get(order_id=order_id)
+        # Retrieve the order by primary key (id)
+        order = Order.objects.get(id=id)  # Use id for primary key lookup
     except Order.DoesNotExist:
         return Response({"detail": "Order not found."}, status=status.HTTP_404_NOT_FOUND)
 
-    # Check if the 'order_status' is present in the request data
+    # Debugging prints to check if the order is being retrieved correctly
+    print(f"Order ID: {order.id}")  # Print the order ID (primary key)
+    
+    # Retrieve fabric and fitmaker related to this order
+    fabric = order.fabric  # Access fabric from the order
+    fitmaker = order.fit_maker  # Access fit_maker from the order
+
+    
+    # Ensure 'order_status' is in the request data
     if 'order_status' not in request.data:
         return Response({"detail": "Order status is required."}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -79,21 +87,57 @@ def update_order_status(request, order_id):
     if new_status not in ['Processing', 'Completed', 'Delivered']:
         return Response({"detail": "Invalid status."}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Handle the "Completed" status update
+    # Update the order status and handle stock reduction for "Completed"
     if new_status == 'Completed':
-        fabric = order.fabric  # Get the fabric for this order
-        
+        # Ensure fabric and fitmaker are properly accessed before the logic begins
         # Check if the fabric stock is available
         if fabric.stock <= 0:
             return Response({"detail": "Insufficient fabric stock to complete the order."}, status=status.HTTP_400_BAD_REQUEST)
-        
-        # If stock is sufficient, reduce the fabric stock by 1
-        fabric.stock -= 1  # Decrease fabric stock by 1
-        fabric.save()  # Save the updated fabric stock
 
-    # Update the order status
+        # Check if the fabric is in the FitMaker's inventory and update stock
+        fitmaker_inventory_fabric = InventoryItem.objects.filter(
+            fitmaker=fitmaker, 
+            item_type='Fabric', 
+            id=fabric.id
+        ).first()
+
+        if fitmaker_inventory_fabric:
+            if fitmaker_inventory_fabric.stock > 0:
+                fitmaker_inventory_fabric.stock -= 1  # Decrease fabric stock by 1
+                fitmaker_inventory_fabric.save()  # Save the updated fabric stock
+            else:
+                return Response({"detail": "FitMaker's fabric stock is insufficient to complete the order."}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Response({"detail": "Fabric not found in FitMaker's inventory."}, status=status.HTTP_400_BAD_REQUEST)
+
+    # If status is not 'Completed', just update the order status
     order.order_status = new_status
     order.save()  # Save the updated order
 
     # Return a success response
     return Response({"detail": f"Order status updated to {new_status}."}, status=status.HTTP_200_OK)
+
+
+
+
+
+@api_view(['POST'])
+def mock_payment_process(request, id):
+    try:
+        # Retrieve the order using the id
+        order = Order.objects.get(id=id)
+    except Order.DoesNotExist:
+        return Response({"detail": "Order not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    # Simulate a payment response (e.g., randomly choose success or failure)
+    import random
+    payment_successful = random.choice([True, False])
+
+    if payment_successful:
+        # Mark the order as paid and delivered
+        order.is_paid = True
+        order.order_status = 'Delivered'
+        order.save()
+        return Response({"detail": "Payment successful, order status updated to 'Delivered'."}, status=status.HTTP_200_OK)
+    else:
+        return Response({"detail": "Payment failed, please try again."}, status=status.HTTP_400_BAD_REQUEST)
