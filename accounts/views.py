@@ -55,7 +55,7 @@ def activate(request, uid64, token):
     if user is not None and default_token_generator.check_token(user, token):
         user.is_active = True
         user.save()
-        return redirect('http://127.0.0.1:8000/accounts/login/')
+        return redirect('http://localhost:5173/login')
     else:
         return Response({'detail': 'Activation failed. The link may be invalid or expired.'}, status=status.HTTP_400_BAD_REQUEST)
 

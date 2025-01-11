@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 # Create your models here.
 class Service(models.Model):
     name = models.CharField(max_length=50)
-    description = models.TextField(blank=True, null=True)
+    description = models.TextField(blank=True, null=True) 
     slug = models.SlugField(max_length=80)
 
     def __str__(self):
