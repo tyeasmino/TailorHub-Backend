@@ -1,5 +1,5 @@
 from rest_framework import status
-from rest_framework import viewsets
+from rest_framework import viewsets, filters, pagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from .models import   InventoryItem, InventoryItemMovement
@@ -9,29 +9,27 @@ from .serializers import   InventoryItemSerializer, InventoryItemMovementSeriali
 from decimal import Decimal
 
  
+class InventoryPagination(pagination.PageNumberPagination):
+    page_size = 10 # items per page
+    page_size_query_param = 'page_size'
+    max_page_size = 25
+
     
 class InventoryItemViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = InventoryItemSerializer
+    pagination_class = InventoryPagination
 
-    # Define the default queryset
     queryset = InventoryItem.objects.all()
 
-    def get_queryset(self):
-        """
-        This view should return a list of all the inventory items
-        that are related to the currently authenticated user's FitMaker.
-        """
-        # Get the authenticated user's fitmaker
+    def get_queryset(self): 
         try:
             fitmaker = self.request.user.fitmaker
         except AttributeError:
             raise NotFound("FitMaker not found for the authenticated user.")
 
-        # Filter InventoryItems by the fitmaker of the authenticated user
         queryset = InventoryItem.objects.filter(fitmaker=fitmaker)
 
-        # Additional filters based on query parameters
         item_type = self.request.query_params.get('item_type', None)
         if item_type is not None:
             queryset = queryset.filter(item_type=item_type)
@@ -44,9 +42,10 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
 
 
 
-class InventoryItemMovementViewSet(viewsets.ModelViewSet):
-    queryset = InventoryItemMovement.objects.all()  # Default queryset
+class InventoryItemMovementViewSet(viewsets.ModelViewSet): 
+    queryset = InventoryItemMovement.objects.all()
     serializer_class = InventoryItemMovementSerializer
+    pagination_class = InventoryPagination
 
     def get_queryset(self):
         """
