@@ -49,7 +49,7 @@ class InventoryItemMovement(models.Model):
                 raise ValueError("Not enough stock available to use.")  
 
             profit_per_item = inventory_item.sell_price_per_unit - inventory_item.purchase_price_per_unit
-            if profit_per_item < 0:
+            if inventory_item.item_type == 'Fabric' and profit_per_item < 0:
                 raise ValueError("Selling price must be greater than purchase price to make a profit.")
 
             total_profit = profit_per_item * quantity
