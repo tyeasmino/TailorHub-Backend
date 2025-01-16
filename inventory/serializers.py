@@ -21,11 +21,9 @@ class InventoryItemSerializer(serializers.ModelSerializer):
 
 
 class InventoryItemMovementSerializer(serializers.ModelSerializer):
-    inventory_item_name = serializers.CharField(source='inventory_item.name')
-
     class Meta:
         model = models.InventoryItemMovement
-        fields = ['id', 'inventory_item_name', 'quantity', 'movement_type', 'date', 'description']
+        fields = '__all__'
 
     def validate(self, data):
         # Validate quantity for "Use" movement

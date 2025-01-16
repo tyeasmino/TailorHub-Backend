@@ -38,10 +38,6 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
 
 
 
-
-
-
-
 class InventoryItemMovementViewSet(viewsets.ModelViewSet): 
     queryset = InventoryItemMovement.objects.all()
     serializer_class = InventoryItemMovementSerializer
