@@ -51,3 +51,66 @@ class DepositFundsView(APIView):
 
         # Return the updated balance as a response
         return Response({"detail": f"Successfully deposited {amount}. New balance: {fitmaker.balance}"}, status=status.HTTP_200_OK)
+
+    
+
+
+class CategoryViewSet(viewsets.ModelViewSet):
+    queryset = models.Category.objects.all()
+    serializer_class = serializers.CategorySerializer
+
+class DressViewSet(viewsets.ModelViewSet):
+    queryset = models.Dress.objects.all()
+    serializer_class = serializers.DressSerializer
+
+       
+
+class DressDetailView(APIView):
+    def get(self, request, pk):
+        try:
+            # Fetch the dress by primary key (id)
+            dress = Dress.objects.get(pk=pk)
+            serializer = DressSerializer(dress)
+            return Response(serializer.data)
+        except Dress.DoesNotExist:
+            # If dress is not found, return a 404
+            return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+
+
+class DressRatingViewSet(viewsets.ModelViewSet):
+    queryset = models.DressRating.objects.all()
+    serializer_class = serializers.DressRatingSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Optionally filter ratings for the authenticated user, if needed
+        return models.DressRating.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        # Optionally handle custom logic for rating creation, such as checking for duplicate ratings
+        user = self.request.user
+        dress = serializer.validated_data['dress']
+        
+        # Prevent the user from rating the same dress multiple times
+        if models.DressRating.objects.filter(user=user, dress=dress).exists():
+            raise serializers.ValidationError("You have already rated this dress.")
+        
+        # Save the rating
+        serializer.save(user=user)
+
+
+class UpdateBestSellerView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        # Get the dress ID from the request
+        dress_id = request.data.get('dress_id', None)
+        
+        if not dress_id:
+            return Response({"detail": "Dress ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        dress = get_object_or_404(models.Dress, id=dress_id)
+        dress.update_best_seller_status()  # Call your method to update best-seller status
+
+        return Response({"detail": f"Best-seller status updated for {dress.name}"}, status=status.HTTP_200_OK)

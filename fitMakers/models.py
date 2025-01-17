@@ -1,5 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils.text import slugify
+
+
 
 # Create your models here.
 class Service(models.Model):
@@ -38,34 +41,81 @@ class FitMaker(models.Model):
 
 
 
+class Category(models.Model):
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True, null=True)
+    
+    def __str__(self):
+        return self.name
 
 
-# 1. Saree
-# The saree is a timeless symbol of grace and tradition, commonly worn in Bangladesh for weddings, religious ceremonies, and cultural festivals. Made from various fabrics like silk, cotton, or chiffon, the saree typically consists of a long piece of cloth (5-9 yards) draped around the body. With intricate embroidery, zari work, or contemporary designs, sarees are perfect for special occasions. The saree is versatile—whether it's a traditional look for a wedding or a simple design for a formal gathering, this garment has maintained its cultural significance for centuries. Available in a variety of colors, styles, and patterns, sarees can be accessorized with bangles, earrings, and the iconic bindi for a complete look.
 
-# 2. Salwar Kameez
-# Salwar Kameez is a staple in every Bangladeshi woman's wardrobe. Consisting of a long tunic (kameez), loose-fitting trousers (salwar), and a scarf or shawl (dupatta), this outfit combines comfort and style. It is worn for both formal and casual events, from office settings to family gatherings and religious functions. The salwar kameez offers an array of choices, including simple cotton versions for daily wear and intricate designs for weddings or festivals. The elegance and ease of movement make it a popular choice for women across generations.
+class Dress(models.Model):
+    name = models.CharField(max_length=255)
+    description = models.TextField(blank=True, null=True)
+    fabric_type = models.CharField(max_length=100)
+    color = models.CharField(max_length=50)
+    size = models.CharField(max_length=10)
+    image = models.URLField(max_length=255, blank=True, null=True)  
+    category = models.ForeignKey(Category, on_delete=models.CASCADE)  
+    base_price = models.DecimalField(max_digits=10, decimal_places=2)
+    discount_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)  
+    is_on_sale = models.BooleanField(default=False)
+    stock_quantity = models.IntegerField(default=0)  
+    min_stock_level = models.IntegerField(default=5) 
+    is_available = models.BooleanField(default=True) 
+    supplier_name = models.CharField(max_length=255, blank=True, null=True)  
+    created_at = models.DateTimeField(auto_now_add=True) 
+    updated_at = models.DateTimeField(auto_now=True)  
+    order_count = models.IntegerField(default=0)  
+    total_sales = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    fit_maker = models.ForeignKey(FitMaker, on_delete=models.CASCADE)
+    is_best_seller = models.BooleanField(default=False)  # Best seller flag
+    is_upcoming = models.BooleanField(default=False)  # Best seller flag
+    is_featured = models.BooleanField(default=False)  # Best seller flag
+    slug = models.SlugField(max_length=255, unique=True, blank=True)
 
-# 3. Three-Piece Set (Salwar Kameez Set)
-# The Three-Piece Set in Bangladesh typically refers to an ensemble that includes a salwar kameez with an added layer such as a jacket, vest, or cardigan. This modern take on the traditional salwar kameez brings a more stylish and layered look, making it perfect for semi-formal occasions, office wear, or evening gatherings. Often crafted in fabrics like cotton, georgette, or silk, these sets are designed with contemporary cuts and embellishments. The three-piece set adds sophistication while maintaining the comfort that comes with the salwar kameez.
 
-# 4. Gown
-# Western-style gowns have found their place in the evolving fashion landscape of Bangladesh. Gowns are commonly worn for weddings, formal parties, gala dinners, or any high-end event. These dresses range from flowing A-line gowns to form-fitting evening wear with delicate details like lace, sequins, or beading. Gowns are ideal for those who want a more glamorous, international look while still maintaining cultural elegance in their choice of accessories and fabrics. Whether opting for a traditional ball gown or a more modern cocktail dress, the gown offers an opportunity to stand out and make a statement.
+    @property
+    def average_rating(self):
+        ratings = self.ratings.all()
+        if ratings:
+            return sum(rating.rating for rating in ratings) / len(ratings)
+        return 0  # Return 0 if no ratings exist
 
-# 5. Maxi Dress
-# Maxi dresses are perfect for relaxed, yet stylish outfits. Popular for casual occasions like day trips, summer outings, or even dinner parties, these dresses typically feature a long, flowing design, often made from breathable fabrics like cotton, linen, or jersey. Available in a wide range of colors, prints, and cuts, maxi dresses offer versatility and comfort. They can be dressed up with accessories or worn casually, making them a go-to choice for women seeking an effortless yet fashionable look. Maxi dresses are particularly ideal for the warm weather of Bangladesh, offering style and comfort in equal measure.
+    def update_best_seller_status(self):
+        """ Update the best seller status based on total sales or other criteria """
+        if self.total_sales >= 2:  # Example: If a dress sells more than 1000 units, mark it as a best seller
+            self.is_best_seller = True
+        else:
+            self.is_best_seller = False
+        self.save()
 
-# 6. Kurti
-# The kurti is a stylish and practical piece of clothing that has become a favorite in urban and rural Bangladesh alike. Shorter than a traditional kameez, the kurti is typically worn with leggings, churidars, or jeans, making it an adaptable option for both casual and semi-formal events. Kurtis are available in various lengths and styles—from simple cotton designs for daily wear to more embellished versions for festive occasions. The versatility of kurtis makes them an essential part of the modern Bangladeshi woman's wardrobe. Whether paired with accessories or worn as-is, kurtis embody simplicity, elegance, and ease.
 
-# 7. Shalwar
-# Shalwar, the traditional loose trousers, are an essential part of many outfits in Bangladesh, often worn with a kameez or kurti. The relaxed fit of the salwar ensures comfort and flexibility, which is particularly appealing in the hot and humid climate of Bangladesh. While the classic salwar has a wide leg, the more contemporary styles include tapered or pleated versions that add modern flair. Salwars are often paired with dupattas to create a complete traditional look, suitable for daily wear, casual events, and even religious ceremonies. They are available in a variety of fabrics, making them perfect for every season.
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            self.slug = slugify(self.name)
+        super().save(*args, **kwargs)
 
-# 8. Churidar
-# The churidar is a more form-fitting version of the traditional salwar, featuring long, narrow legs that gather at the ankle. Often paired with a kameez or a kurti, the churidar creates a sleek, elegant silhouette. This style is perfect for more formal occasions or when a more contemporary look is desired. Churidars are highly popular for weddings, cultural events, or even day-to-day wear in urban settings. Available in many fabrics and colors, churidars add a refined touch to any outfit while providing ultimate comfort.
 
-# 9. Dhoti Gown
-# The dhoti gown is a modern fusion of traditional Bengali wear and contemporary fashion. Inspired by the classic dhoti, this gown merges cultural heritage with a chic, fashionable twist. The dhoti gown typically features a flowing lower half like a traditional gown, paired with a draped fabric similar to the dhoti. Often seen at upscale events, weddings, and formal parties, this unique garment allows women to embrace the essence of traditional Bangladeshi attire while enjoying the modern comfort of a gown. A perfect choice for those seeking to blend cultural identity with global fashion trends.
 
-# 10. Peplum Top & Skirt
-# Peplum tops paired with skirts are a modern addition to the Bangladeshi fashion scene, combining traditional elegance with contemporary design. Peplum tops, characterized by a short, flared section at the waist, create an hourglass figure and add structure to an outfit. When paired with a well-tailored skirt, this combination is perfect for both formal and semi-formal occasions, such as office events, cocktail parties, and evening gatherings. Peplum tops are available in many styles, including embroidered designs, making them suitable for various occasions, while skirts can range from pencil to flared, allowing for versatility in styling.
+    def __str__(self):
+        return self.name
+
+
+
+
+
+class DressRating(models.Model): 
+    dress = models.ForeignKey(Dress, on_delete=models.CASCADE, related_name='ratings')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    rating = models.DecimalField(max_digits=2, decimal_places=1, choices=[(i, i) for i in range(6)], default=0)  # 0-5 rating
+    comment = models.TextField(blank=True, null=True)  # Optional: Allow users to leave comments with their rating
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user.username} rated {self.dress.name} with {self.rating}"
+
+    class Meta:
+        unique_together = ['dress', 'user']
+

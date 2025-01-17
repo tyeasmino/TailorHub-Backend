@@ -1,4 +1,4 @@
-from rest_framework import serializers, viewsets
+from rest_framework import serializers, viewsets, pagination
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
@@ -13,9 +13,16 @@ from rest_framework.permissions import IsAuthenticated
 
 
 # Create your views here.
+class OrderPagination(pagination.PageNumberPagination):
+    page_size = 5 # items per page
+    page_size_query_param = 'page_size'
+    max_page_size = 15
+
+
 class OrderViewSet(viewsets.ModelViewSet): 
     serializer_class = OrderSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = OrderPagination
 
     def get_queryset(self):
         user = self.request.user   
@@ -60,6 +67,7 @@ class OrderViewSet(viewsets.ModelViewSet):
 
         return Response(OrderSerializer(order).data, status=201)
     
+
 
 @api_view(['PATCH'])
 def update_order_status(request, id):  # Use `id` here
@@ -116,7 +124,6 @@ def update_order_status(request, id):  # Use `id` here
 
     # Return a success response
     return Response({"detail": f"Order status updated to {new_status}."}, status=status.HTTP_200_OK)
-
 
 
 

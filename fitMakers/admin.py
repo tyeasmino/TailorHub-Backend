@@ -9,3 +9,7 @@ class ServiceAdmin(admin.ModelAdmin):
 
 admin.site.register(models.Service, ServiceAdmin)
 admin.site.register(models.FitMaker)
+admin.site.register(models.Category)
+admin.site.register(models.Dress)
+admin.site.register(models.DressRating)
+
