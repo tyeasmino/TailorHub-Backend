@@ -63,7 +63,21 @@ class DressViewSet(viewsets.ModelViewSet):
     queryset = models.Dress.objects.all()
     serializer_class = serializers.DressSerializer
 
-       
+    def get_queryset(self): 
+        # Start with the base queryset
+        queryset = models.Dress.objects.all()
+        
+        is_upcoming = self.request.query_params.get('is_upcoming', None)
+        if is_upcoming is not None:
+            queryset = queryset.filter(is_upcoming=is_upcoming.lower() == 'true')  # Convert to boolean
+ 
+        is_featured = self.request.query_params.get('is_featured', None)
+        if is_featured is not None:
+            queryset = queryset.filter(is_featured=is_featured.lower() == 'true')
+
+        return queryset
+ 
+
 
 class DressDetailView(APIView):
     def get(self, request, pk):
