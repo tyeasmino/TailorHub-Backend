@@ -10,9 +10,9 @@ from decimal import Decimal
 from rest_framework.generics import ListAPIView
 from rest_framework.permissions import AllowAny
 
- 
+
 class InventoryPagination(pagination.PageNumberPagination):
-    page_size = 10 # items per page
+    page_size = 5 # items per page
     page_size_query_param = 'page_size'
     max_page_size = 25
 
