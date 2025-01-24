@@ -7,14 +7,17 @@ from fitMakers.models import FitMaker
 from rest_framework.exceptions import NotFound
 from .serializers import   InventoryItemSerializer, InventoryItemMovementSerializer
 from decimal import Decimal
+from rest_framework.generics import ListAPIView
+from rest_framework.permissions import AllowAny
 
  
 class InventoryPagination(pagination.PageNumberPagination):
-    page_size = 5 # items per page
+    page_size = 10 # items per page
     page_size_query_param = 'page_size'
-    max_page_size = 15
+    max_page_size = 25
 
-    
+
+
 class InventoryItemViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     serializer_class = InventoryItemSerializer
@@ -33,6 +36,27 @@ class InventoryItemViewSet(viewsets.ModelViewSet):
         item_type = self.request.query_params.get('item_type', None)
         if item_type is not None:
             queryset = queryset.filter(item_type=item_type)
+
+        return queryset
+        
+
+
+class InventoryAllItems(viewsets.ModelViewSet):
+    serializer_class = InventoryItemSerializer
+    pagination_class = InventoryPagination
+    queryset = InventoryItem.objects.all()
+
+    def get_queryset(self): 
+        # Start by getting all inventory items
+        queryset = InventoryItem.objects.all()
+
+        # First, filter by "Fabric" and "Dress" item_type
+        queryset = queryset.filter(item_type__in=["Fabric", "Dress"])
+
+        # If an 'item_type' query param is provided, apply additional filtering
+        item_type_param = self.request.query_params.get('item_type', None)
+        if item_type_param:
+            queryset = queryset.filter(item_type=item_type_param)
 
         return queryset
 

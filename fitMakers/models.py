@@ -70,9 +70,9 @@ class Dress(models.Model):
     order_count = models.IntegerField(default=0)  
     total_sales = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
     fit_maker = models.ForeignKey(FitMaker, on_delete=models.CASCADE)
-    is_best_seller = models.BooleanField(default=False)  # Best seller flag
-    is_upcoming = models.BooleanField(default=False)  # Best seller flag
-    is_featured = models.BooleanField(default=False)  # Best seller flag
+    is_best_seller = models.BooleanField(default=False)  
+    is_upcoming = models.BooleanField(default=False)  
+    is_featured = models.BooleanField(default=False)  
     slug = models.SlugField(max_length=255, unique=True, blank=True)
 
 
