@@ -63,7 +63,7 @@ class InventoryItemMovement(models.Model):
             if inventory_item.stock < quantity:
                 raise ValueError("Not enough stock available to use.")  
 
-            if discount_price == 0:
+            if inventory_item.discount_price == 0:
                 profit_per_item = inventory_item.base_price - inventory_item.purchase_price
             else: 
                 profit_per_item = inventory_item.discount_price - inventory_item.purchase_price
@@ -73,7 +73,7 @@ class InventoryItemMovement(models.Model):
 
             total_profit = profit_per_item * quantity
             fitmaker.fabric_profit += total_profit
-            if discount_price == 0:
+            if inventory_item.discount_price == 0:
                 total_sale_value = inventory_item.base_price * quantity
             else: 
                  total_sale_value = inventory_item.discount_price * quantity
