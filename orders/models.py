@@ -67,3 +67,12 @@ class Order(models.Model):
     
 
 
+class OrderItem(models.Model):
+    order = models.ForeignKey(Order, related_name="items", on_delete=models.CASCADE)
+    item = models.ForeignKey(InventoryItem, on_delete=models.SET_NULL, null=True, blank=True)  # The item itself
+    dress = models.ForeignKey(DressType, on_delete=models.SET_NULL, null=True, blank=True)  # The dress, if applicable
+    quantity = models.PositiveIntegerField()
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def total_price(self):
+        return self.price * self.quantity

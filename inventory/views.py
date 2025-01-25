@@ -12,7 +12,7 @@ from rest_framework.permissions import AllowAny
 
 
 class InventoryPagination(pagination.PageNumberPagination):
-    page_size = 5 # items per page
+    page_size = 12 # items per page
     page_size_query_param = 'page_size'
     max_page_size = 25
 
@@ -57,8 +57,20 @@ class InventoryAllItems(viewsets.ModelViewSet):
         item_type_param = self.request.query_params.get('item_type', None)
         if item_type_param:
             queryset = queryset.filter(item_type=item_type_param)
+        
+        is_featured_param = self.request.query_params.get('is_featured', None)
+        if is_featured_param is not None:
+            # Convert 'is_featured' to a boolean (it should be either 'true' or 'false')
+            queryset = queryset.filter(is_featured=is_featured_param.lower() == 'true')
+
+        is_upcoming_param = self.request.query_params.get('is_upcoming', None)
+        if is_upcoming_param is not None:
+            # Convert 'is_featured' to a boolean (it should be either 'true' or 'false')
+            queryset = queryset.filter(is_upcoming=is_upcoming_param.lower() == 'true')
 
         return queryset
+
+
 
 
 
@@ -68,21 +80,13 @@ class InventoryItemMovementViewSet(viewsets.ModelViewSet):
     pagination_class = InventoryPagination
 
     def get_queryset(self):
-        """
-        Get the list of inventory item movements filtered by the logged-in user's FitMaker.
-        Only movements for the authenticated user's FitMaker will be returned.
-        """
-        # Get the authenticated user's FitMaker
         fitmaker = FitMaker.objects.filter(user=self.request.user).first()
 
-        # If no FitMaker exists for the user, return an empty queryset
         if not fitmaker:
             return InventoryItemMovement.objects.none()
 
-        # Filter InventoryItemMovements by the logged-in user's FitMaker
         queryset = InventoryItemMovement.objects.filter(inventory_item__fitmaker=fitmaker)
 
-        # Additional filters based on query parameters (optional)
         inventory_item_id = self.request.query_params.get('inventory_item', None)
         category = self.request.query_params.get('category', None)
 
@@ -95,10 +99,6 @@ class InventoryItemMovementViewSet(viewsets.ModelViewSet):
         return queryset
 
     def create(self, request, *args, **kwargs):
-        """
-        Handle the creation of an inventory item movement. Ensure the item belongs to the logged-in user's FitMaker.
-        """
-        # Get the FitMaker for the authenticated user
         fitmaker = FitMaker.objects.filter(user=request.user).first()
 
         if not fitmaker:
@@ -140,4 +140,3 @@ class InventoryItemMovementViewSet(viewsets.ModelViewSet):
         })
 
 
- 

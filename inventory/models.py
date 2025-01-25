@@ -39,7 +39,7 @@ class InventoryItem(models.Model):
         self.save()
 
     def __str__(self):
-        return f"{self.name} ({'Tool' if self.item_type == 'Tool' else 'Fabric'}) - (Stock: {self.stock})"
+        return f"{self.name} ({'Tool' if self.item_type == 'Tool' else 'Fabric/Dress'}) - (Stock: {self.stock})"
 
     
 

@@ -1,18 +1,34 @@
 from django.shortcuts import render, redirect
 from sslcommerz_lib import SSLCOMMERZ 
 import random, string
+from django.core.mail import send_mail
+from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
 # Create your views here.
 
+def send_invoice_email(user, order):
+    # Create the email subject and body using a template
+    subject = f"Invoice for Order #{order.order_id}"
+    message = render_to_string('invoice.html', {'user': user, 'order': order})
+
+    # Send the email
+    send_mail(
+        subject,
+        message,
+        settings.DEFAULT_FROM_EMAIL,  # Your email here
+        [user.email],
+        fail_silently=False,
+    )
 
 def unique_transaction_id_generator(size=10, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
 
 
 def payment(request):
-    order_total = 1520
+    cart_data = request.POST.get('cart_items')  # This is the cart data sent from frontend (e.g., in JSON format)
+    order_total = sum(item['total_price'] for item in cart_data)  # Calculate the total amount from the cart
 
-    print('my ordered amount: ', order_total)
     settings = { 'store_id': 'tailo678dcfa09b834', 'store_pass': 'tailo678dcfa09b834@ssl', 'issandbox': True }
     sslcz = SSLCOMMERZ(settings)
     post_body = {}
@@ -33,7 +49,7 @@ def payment(request):
     post_body['cus_country'] = "Bangladesh"
     post_body['shipping_method'] = "NO"
     post_body['multi_card_name'] = ""
-    post_body['num_of_item'] = 1
+    post_body['num_of_item'] = len(cart_data)
     post_body['product_name'] = "Test"
     post_body['product_category'] = "Test Category"
     post_body['product_profile'] = "general"
@@ -48,6 +64,29 @@ def payment(request):
 
 @csrf_exempt
 def goback(request):
+    # # Get the cart data from the frontend (in POST request)
+    # cart_data = request.POST.get('cart_items')  # Assuming you sent cart items in the POST body
+    # order_total = sum(item['total_price'] for item in cart_data)
+
+    # # Create the order
+    # order = Order.objects.create(
+    #     user=request.user,
+    #     total_amount=order_total,
+    #     is_paid=True  # Assuming successful payment
+    # )
+
+    # # Create the order items
+    # for item in cart_data:
+    #     OrderItem.objects.create(
+    #         order=order,
+    #         item=InventoryItem.objects.get(id=item['item_id']),  # Get the item from the ID
+    #         dress=DressType.objects.get(id=item['dress_id']),  # Get the dress from the ID
+    #         quantity=item['quantity'],
+    #         price=item['price']
+    #     )
+
+    # # Send the invoice email (details below)
+    # send_invoice_email(request.user, order)
     return redirect("http://localhost:5173/dresses/")
 
 @csrf_exempt

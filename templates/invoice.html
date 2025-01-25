@@ -1,0 +1,24 @@
+ 
+<div>
+    <h1>Invoice for Order #{{ order.order_id }}</h1>
+    <p>Thank you for your order, {{ user.username }}. Below are the details:</p>
+
+    <table>
+        <tr>
+            <th>Item</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Total</th>
+        </tr>
+        {% for item in order.items.all %}
+        <tr>
+            <td>{{ item.item.name }}</td>
+            <td>{{ item.price }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ item.total_price }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+    <p><strong>Total Amount:</strong> {{ order.total_amount }}</p>
+</div>
