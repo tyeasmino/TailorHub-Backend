@@ -26,9 +26,10 @@ def unique_transaction_id_generator(size=10, chars=string.ascii_uppercase + stri
 
 
 def payment(request):
-    cart_data = request.POST.get('cart_items')  # This is the cart data sent from frontend (e.g., in JSON format)
-    order_total = sum(item['total_price'] for item in cart_data)  # Calculate the total amount from the cart
+    # cart_data = request.POST.get('cart_items')  
+    # order_total = sum(item['total_price'] for item in cart_data)   
 
+    order_total = 120
     settings = { 'store_id': 'tailo678dcfa09b834', 'store_pass': 'tailo678dcfa09b834@ssl', 'issandbox': True }
     sslcz = SSLCOMMERZ(settings)
     post_body = {}
@@ -49,7 +50,7 @@ def payment(request):
     post_body['cus_country'] = "Bangladesh"
     post_body['shipping_method'] = "NO"
     post_body['multi_card_name'] = ""
-    post_body['num_of_item'] = len(cart_data)
+    post_body['num_of_item'] =  45 # len(cart_data)
     post_body['product_name'] = "Test"
     post_body['product_category'] = "Test Category"
     post_body['product_profile'] = "general"

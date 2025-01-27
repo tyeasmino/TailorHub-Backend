@@ -23,12 +23,13 @@ class Order(models.Model):
     
     fabric_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     dress_price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    total_bill = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     
-    order_status = models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES, default='Processing')
+    total_bill = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    is_paid = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    is_paid = models.BooleanField(default=False)
+    
+    order_status = models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES, default='Processing')
 
     def generate_order_id(self):
         """ Generate a custom, random order ID in the format `ORD-XXXXXX` """
@@ -38,7 +39,10 @@ class Order(models.Model):
     def save(self, *args, **kwargs):
         # Automatically calculate the total bill if fabric and dress are selected
         if self.fabric and self.dress:
-            self.fabric_price = self.fabric.sell_price_per_unit
+            if self.fabric.discount_price != '0.00':
+                self.fabric_price = self.fabric.discount_price
+            else: 
+                self.fabric_price = self.fabric.base_price
             self.dress_price = self.dress.sell_price_per_unit
             self.total_bill = (self.fabric_price + self.dress_price)  # No discount yet
 
@@ -67,12 +71,43 @@ class Order(models.Model):
     
 
 
-class OrderItem(models.Model):
-    order = models.ForeignKey(Order, related_name="items", on_delete=models.CASCADE)
-    item = models.ForeignKey(InventoryItem, on_delete=models.SET_NULL, null=True, blank=True)  # The item itself
-    dress = models.ForeignKey(DressType, on_delete=models.SET_NULL, null=True, blank=True)  # The dress, if applicable
-    quantity = models.PositiveIntegerField()
-    price = models.DecimalField(max_digits=10, decimal_places=2)
+# # First define OrderItem
+# class OrderItem(models.Model):
+#     order = models.ForeignKey('NewOrder', related_name='items', on_delete=models.CASCADE)  # Reference to NewOrder
+#     item = models.ForeignKey(InventoryItem, on_delete=models.CASCADE)  # Reference to the fabric or dress item
+#     quantity = models.IntegerField(default=1)
+#     price = models.DecimalField(max_digits=10, decimal_places=2)
 
-    def total_price(self):
-        return self.price * self.quantity
+#     def __str__(self):
+#         return f"{self.quantity} x {self.item.name}"
+
+#     @property
+#     def item_total_price(self):
+#         """Calculate the total price for this item (quantity * price)."""
+#         return self.quantity * self.price
+
+
+# class NewOrder(models.Model):
+#     order_id = models.CharField(max_length=20, related_name='item', unique=True, blank=True)
+#     fit_finder = models.ForeignKey(FitFinder, on_delete=models.CASCADE)
+#     fit_maker = models.ForeignKey(FitMaker, on_delete=models.CASCADE)
+    
+#     total_bill = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+#     is_paid = models.BooleanField(default=False)
+#     created_at = models.DateTimeField(auto_now_add=True)
+#     updated_at = models.DateTimeField(auto_now=True)
+    
+#     order_status = models.CharField(max_length=20, choices=ORDER_STATUS_CHOICES, default='Processing')
+    
+#     items = models.ManyToManyField(OrderItem, related_name='new_orders', blank=True)
+
+#     def generate_order_id(self):
+#         """ Generate a custom, random order ID in the format `ORD-XXXXXX` """
+#         random_string = ''.join(random.choices(string.ascii_lowercase + string.digits, k=6))
+#         return f"ORD#{random_string.upper()}"
+
+#     def save(self, *args, **kwargs):
+#         super().save(*args, **kwargs)
+    
+#     def __str__(self):
+#         return f"{self.order_id} - {self.fit_finder.user.username}"
