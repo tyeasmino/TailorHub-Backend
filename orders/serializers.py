@@ -5,35 +5,15 @@ from .models import Order
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    # Add related field names for better readability in the response
+    fabric_OR_dress_name = serializers.CharField(source='fabric_OR_dress.name', read_only=True)
+    tailorService_name = serializers.CharField(source='tailorService.name', read_only=True)
+
     class Meta:
         model = Order
-        fields = '__all__'
-
-
-
-    
-
-
-# class OrderItemSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = OrderItem
-#         fields = ['item', 'quantity', 'price', 'item_total_price']
-
-#     # Optionally you could validate price and quantity
-#     def validate(self, attrs):
-#         if attrs['quantity'] <= 0:
-#             raise serializers.ValidationError("Quantity must be greater than zero.")
-#         return attrs
-
-
-# class NewOrderSerializer(serializers.ModelSerializer):
-#     items = OrderItemSerializer(many=True)  # Nested order items
-#     total_bill = serializers.SerializerMethodField()
-
-#     class Meta:
-#         model = NewOrder
-#         fields = ['order_id', 'fit_finder', 'fit_maker', 'total_bill', 'items', 'order_status', 'is_paid', 'created_at', 'updated_at']
-
-#     def get_total_bill(self, obj):
-#         # Calculate total bill by summing item total prices
-#         return sum([item.item_total_price for item in obj.items.all()])
+        fields = [
+            'id', 'order_id', 'fabric_OR_dress_quantity', 'fabric_OR_dress_price', 
+            'tailorService_price', 'total_bill', 'is_paid', 'created_at', 
+            'order_status', 'fit_finder', 'fit_maker', 'fabric_OR_dress', 'tailorService',
+            'fabric_OR_dress_name', 'tailorService_name'  # Add these fields to the response
+        ]

@@ -7,19 +7,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 # Create your views here.
 
-def send_invoice_email(user, order):
-    # Create the email subject and body using a template
-    subject = f"Invoice for Order #{order.order_id}"
-    message = render_to_string('invoice.html', {'user': user, 'order': order})
 
-    # Send the email
-    send_mail(
-        subject,
-        message,
-        settings.DEFAULT_FROM_EMAIL,  # Your email here
-        [user.email],
-        fail_silently=False,
-    )
 
 def unique_transaction_id_generator(size=10, chars=string.ascii_uppercase + string.digits):
     return ''.join(random.choice(chars) for _ in range(size))
@@ -64,7 +52,13 @@ def payment(request):
 
 
 @csrf_exempt
+def gohome(request):
+    return redirect("http://localhost:5173/Checkout")
+
+
+@csrf_exempt
 def goback(request):
+    return redirect("http://localhost:5173/dresses/")
     # # Get the cart data from the frontend (in POST request)
     # cart_data = request.POST.get('cart_items')  # Assuming you sent cart items in the POST body
     # order_total = sum(item['total_price'] for item in cart_data)
@@ -80,16 +74,26 @@ def goback(request):
     # for item in cart_data:
     #     OrderItem.objects.create(
     #         order=order,
-    #         item=InventoryItem.objects.get(id=item['item_id']),  # Get the item from the ID
-    #         dress=DressType.objects.get(id=item['dress_id']),  # Get the dress from the ID
+    #         item=InventoryItem.objects.get(id=item['item_id']),  
+    #         dress=DressType.objects.get(id=item['dress_id']),   
     #         quantity=item['quantity'],
     #         price=item['price']
     #     )
 
     # # Send the invoice email (details below)
     # send_invoice_email(request.user, order)
-    return redirect("http://localhost:5173/dresses/")
 
-@csrf_exempt
-def gohome(request):
-    return redirect("http://localhost:5173/Checkout")
+
+def send_invoice_email(user, order):
+    # Create the email subject and body using a template
+    subject = f"Invoice for Order #{order.order_id}"
+    message = render_to_string('invoice.html', {'user': user, 'order': order})
+
+    # Send the email
+    send_mail(
+        subject,
+        message,
+        settings.DEFAULT_FROM_EMAIL,  # Your email here
+        [user.email],
+        fail_silently=False,
+    )
