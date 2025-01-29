@@ -1,0 +1,96 @@
+1 .   Course Mobile No : 01777661530
+
+2 .   Result of course mobile phone no % 18 :  16
+
+3 .   Unique Name of your project : skillCrafted
+
+4 .   Backend Project Github  Repository  Link: https://github.com/tyeasmino/SkillCrafted-Backend
+
+5 .   Backend Project Live  Link: https://skillcrafted-backend.vercel.app/ 
+
+6 .   Frontend Project Github  Repository  Link: https://github.com/tyeasmino/SkillCrafted-Frontend 
+
+7 .   Frontend Project Live  Link: https://skill-crafted-frontend.vercel.app/ 
+
+8 .   Admin username : tyeasmino 
+
+9 .   Admin password : Zyur%l{1?3Xf
+
+
+
+
+
+frontend: https://github.com/tyeasmino/skillCrafted-Frontend
+backend: https://github.com/tyeasmino/skillCrafted-Backend
+
+
+client: SkillSeeker
+freelancer: SkillCrafter 
+supabase: PlcBpw$T3bSX#XNzlU
+mitaakter1984:   >:x2=Z4=NOyd
+tyeasmino: yuM%<~zG4ua%"|=J
+rahim: >:x2=Z4=NOyd
+tyeasmino: Zyur%l{1?3Xf
+
+
+ratin.cse@gmail.com
+
+other user pass: '|9jAFuzBp|GvMsP
+
+
+
+primary color: #425BF5
+black color: #141A34
+gray color: #626677
+#F4F5F7
+const [user, userAuthLoaading] = userAuth();
+
+
+http://127.0.0.1:8000/auth/password/reset/ 
+http://127.0.0.1:8000/auth/password/change/
+
+dure thak 
+------------------------------------------------
+
+http://127.0.0.1:8000/skillCrafter/project-proposal/?project=1
+http://127.0.0.1:8000/skillCrafter/project-proposal/?proposed_by=1
+http://127.0.0.1:8000/skillCrafter/project-review/?skillCrafter=1
+http://127.0.0.1:8000/projects/projectList/?skillSeeker=1  
+
+
+http://127.0.0.1:8000/projects/projectList/?categorySlug=web-development 
+http://127.0.0.1:8000/projects/projectList/?categorySlug=graphic-design
+http://127.0.0.1:8000/projects/projectList/?categorySlug=web-development&skillSeeker=2
+
+http://127.0.0.1:8000/projects/projectList/?budget__gte=5000
+http://127.0.0.1:8000/projects/projectList/?budget__lte=10000
+http://127.0.0.1:8000/projects/projectList/?budget__gte=5000&budget__lte=10000
+http://127.0.0.1:8000/projects/projectList/?skillSeeker=2&budget__gte=5000
+
+
+
+done 
+--------------------------------
+akjon ki only akbar e proposal submit korte parbe??
+
+ 
+
+
+main figma - https://www.figma.com/community/file/1364364236335136945
+login/registration - https://www.figma.com/community/file/1332416436156584398
+
+
+
+POS Software --product cloth, size, color, amount, quantity, discount, invoice,stock management, profite, sales related
+
+E-commerce
+Online Delivery App
+Parking App-- 
+home owner - location, slot, price,
+car owner - 
+
+Social Media
+HR Management
+Donation Website
+Ride Sharing 
+strip paayment gateway
