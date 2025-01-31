@@ -34,7 +34,7 @@ class UserRegistrationApiView(APIView):
             # FRONTEND_URL = "https://skillcrafter1.netlify.app"  # or use environment variables
 
             # confirm_link = f"{FRONTEND_URL}/accounts/active/{uid}/{token}"
-            confirm_link = f"http://127.0.0.1:8000/accounts/active/{uid}/{token}"
+            confirm_link = f"https://tailor-hub-backend.vercel.app/accounts/active/{uid}/{token}"
 
             email_subject = "Confirm Your Email"
             email_body = render_to_string('confirm_email.html', {'confirm_link': confirm_link})
