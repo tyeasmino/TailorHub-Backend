@@ -29,12 +29,14 @@ SECRET_KEY = 'django-insecure-_tf=bi6r5#s7zg0i(y%&prifsx6q45i7sgwx!g5v52#ie!c*=i
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["127.0.0.1", ".vercel.app"] 
 LOGIN_URL = "http://127.0.0.1:8000/auth/login/"
 
 # Application definition
 
 INSTALLED_APPS = [
+    "whitenoise.runserver_nostatic",
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -155,7 +157,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'tailorHub_Backend.wsgi.application'
+WSGI_APPLICATION = 'tailorHub_Backend.wsgi.app'
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
@@ -168,10 +170,21 @@ EMAIL_HOST_PASSWORD = env("EMAIL_PASSWORD")
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'postgres',
+        'USER': 'postgres.hudlngvvcaviiusdnulp',
+        'PASSWORD': '9UDabiMrAN3t7SB9',
+        'HOST': 'aws-0-ap-southeast-1.pooler.supabase.com',
+        'PORT': '6543'
     }
 }
 
