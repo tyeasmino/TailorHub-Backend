@@ -30,7 +30,7 @@ SECRET_KEY = 'django-insecure-_tf=bi6r5#s7zg0i(y%&prifsx6q45i7sgwx!g5v52#ie!c*=i
 DEBUG = True
 
 ALLOWED_HOSTS = ["127.0.0.1", ".vercel.app"] 
-LOGIN_URL = "http://127.0.0.1:8000/auth/login/"
+LOGIN_URL = "https://tailor-hub-frontend.vercel.app/login"
 
 # Application definition
 
@@ -80,13 +80,13 @@ CORS_ORIGIN_WHITELIST = (
     "http://localhost:3000",
     "http://localhost:8000",
     'http://localhost:5173',
-    # "https://skillcrafter1.netlify.app"
+    "https://tailor-hub-frontend.vercel.app"
 )
 
 CSRF_TRUSTED_ORIGINS = [
     "http://localhost:3000", 
     'http://localhost:5173',
-    # "https://skillcrafter1.netlify.app"
+    "https://tailor-hub-frontend.vercel.app"
 ]
 
 
@@ -108,7 +108,7 @@ MIDDLEWARE = [
 
 
 CORS_ALLOWED_ORIGINS = [
-    "https://skillcrafter1.netlify.app",   
+    "https://tailor-hub-frontend.vercel.app",   
 ]
 CORS_ALLOW_ALL_ORIGINS = True
 
