@@ -18,8 +18,8 @@ class DressType(models.Model):
 class DressMeasurement(models.Model):
     dress_type = models.ForeignKey(DressType, on_delete=models.CASCADE)
     fit_finder = models.ForeignKey(FitFinder, on_delete=models.CASCADE)  # Added fit_finder field
-    dress_long = models.IntegerField()  # Length of the dress
-    chest_or_hip = models.IntegerField()  # Chest for shirt or Hip for pant
+    dress_long = models.IntegerField(null=True, blank=True)  # Length of the dress
+    chest_or_hip = models.IntegerField(null=True, blank=True)  # Chest for shirt or Hip for pant
     hand_pocket_length = models.IntegerField(null=True, blank=True)  # Sleeve length or pant's pocket length
     hand_pant_start = models.IntegerField(null=True, blank=True)  # Start point of sleeve/pant
     hand_pant_end = models.IntegerField(null=True, blank=True)  # End point of sleeve/pant
