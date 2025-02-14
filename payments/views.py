@@ -16,7 +16,8 @@ def unique_transaction_id_generator(size=10, chars=string.ascii_uppercase + stri
 
 
 def payment(request): 
-    cart_items = CartList.objects.filter(fit_finder=request.user.fitfinder)
+    ffid = request.GET.get('ffid') 
+    cart_items = CartList.objects.filter(fit_finder=ffid)
     order_total = 0
 
     for item in cart_items:
@@ -35,13 +36,13 @@ def payment(request):
     post_body['tran_id'] = unique_transaction_id_generator()
 
 
-    post_body['success_url'] = f"http://127.0.0.1:8000/payments/goback?fitfinder={request.user.fitfinder.id}"
+    post_body['success_url'] = f"http://127.0.0.1:8000/payments/goback?fitfinder={ffid}"
     post_body['fail_url'] =  "http://localhost:5173/cart2"  # 'https://tailor-hub-backend.vercel.app/payments/gohome' 
     post_body['cancel_url'] = 'https://tailor-hub-backend.vercel.app/payments/gohome'
 
     post_body['emi_option'] = 0
-    post_body['cus_name'] = request.user.username
-    post_body['cus_email'] = request.user.email
+    post_body['cus_name'] = "tamima" #request.user.username
+    post_body['cus_email'] = "abcd" #request.user.email
     post_body['cus_phone'] = "01789000XXX"
     post_body['cus_add1'] = "Dhaka"
     post_body['cus_city'] = "Dhaka"
