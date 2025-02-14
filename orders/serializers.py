@@ -1,7 +1,14 @@
 from rest_framework import serializers
-from .models import Order 
+from .models import Order, CartList
 
 
+# Create a serializer to handle cart list data
+
+    
+class CartListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CartList
+        fields = fields = '__all__'
 
 
 class OrderSerializer(serializers.ModelSerializer):

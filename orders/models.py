@@ -7,6 +7,27 @@ from fitMakers.models import FitMaker
 from inventory.models import InventoryItem
 from measurements.models import DressType
 
+
+
+class CartList(models.Model):
+    fit_finder = models.ForeignKey(FitFinder, on_delete=models.CASCADE)
+    fit_maker = models.ForeignKey(FitMaker, on_delete=models.CASCADE)   
+
+    fabric_or_dress = models.ForeignKey(InventoryItem, on_delete=models.SET_NULL, null=True, blank=True)
+    fabric_or_dress_quantity = models.PositiveIntegerField(default=1)
+    tailorService = models.ForeignKey(DressType, on_delete=models.SET_NULL, null=True, blank=True)
+    added_at = models.DateTimeField(auto_now_add=True) 
+
+    def __str__(self):
+        return f"CartItem for {self.fit_finder.user.username} - {self.fabric_or_dress.name}"
+
+    class Meta:
+        ordering = ['added_at']
+
+
+
+
+
 ORDER_STATUS_CHOICES = [
     ('Processing', 'Processing'),
     ('Completed', 'Completed'),

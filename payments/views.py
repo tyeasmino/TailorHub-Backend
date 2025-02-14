@@ -5,6 +5,7 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
+from orders.models import Order, CartList
 # Create your views here.
 
 
@@ -13,11 +14,18 @@ def unique_transaction_id_generator(size=10, chars=string.ascii_uppercase + stri
     return ''.join(random.choice(chars) for _ in range(size))
 
 
-def payment(request):
-    # cart_data = request.POST.get('cart_items')  
-    # order_total = sum(item['total_price'] for item in cart_data)   
+def payment(request): 
+    cart_items = CartList.objects.filter(fit_finder=request.user.fitfinder)
+    order_total = 0
 
-    order_total = 120
+    for item in cart_items:
+        fabric_or_dress_price = item.fabric_or_dress.discount_price if item.fabric_or_dress.discount_price > 0 else item.fabric_or_dress.base_price
+        tailor_service_price = item.tailorService.sell_price_per_unit if item.tailorService else 0
+        item_total = (fabric_or_dress_price * item.fabric_or_dress_quantity) + tailor_service_price
+
+        order_total += item_total
+
+
     settings = { 'store_id': 'tailo678dcfa09b834', 'store_pass': 'tailo678dcfa09b834@ssl', 'issandbox': True }
     sslcz = SSLCOMMERZ(settings)
     post_body = {}
@@ -25,8 +33,9 @@ def payment(request):
     post_body['currency'] = "BDT"
     post_body['tran_id'] = unique_transaction_id_generator()
 
+
     post_body['success_url'] = "https://tailor-hub-backend.vercel.app/payments/goback"
-    post_body['fail_url'] = 'https://tailor-hub-backend.vercel.app/payments/gohome' 
+    post_body['fail_url'] =  "http://localhost:5173/cart2"  # 'https://tailor-hub-backend.vercel.app/payments/gohome' 
     post_body['cancel_url'] = 'https://tailor-hub-backend.vercel.app/payments/gohome'
 
     post_body['emi_option'] = 0
@@ -58,31 +67,41 @@ def gohome(request):
 
 @csrf_exempt
 def goback(request):
+    print("Inside goback view") 
+    cart_items = CartList.objects.filter(fit_finder=request.user.fitfinder)
+  
+    
+    # Iterate over the cart items and calculate the total
+    for item in cart_items:
+        fabric_or_dress_price = item.fabric_or_dress.discount_price if item.fabric_or_dress.discount_price > 0 else item.fabric_or_dress.base_price
+        tailor_service_price = item.tailorService.sell_price_per_unit if item.tailorService else 0
+        item_total = (fabric_or_dress_price * item.fabric_or_dress_quantity) + tailor_service_price
+ 
+        
+        # Create the order object using the 'create' method
+        order = Order.objects.create(
+            order_id=unique_transaction_id_generator(),  # Generate unique order ID
+            fit_finder=item.fit_finder,                   # Link the fit_finder (user)
+            fit_maker=item.fit_maker,                     # Link the fit_maker (tailor)
+            fabric_OR_dress=item.fabric_or_dress,         # Link the fabric_or_dress (inventory item)
+            fabric_OR_dress_price=fabric_or_dress_price,   # Price for the fabric_or_dress
+            fabric_OR_dress_quantity=item.fabric_or_dress_quantity,  # Quantity of fabric_or_dress
+            tailorService=item.tailorService,             # Link the tailor service (DressType)
+            tailorService_price=tailor_service_price,     # Price for the tailor service
+            total_bill=item_total,                        # Total price for this order item
+            is_paid=True,                                 # Set as paid after successful payment
+            order_status='Processing'                      # Update order status after successful payment
+        )
+        order.save()
+        
+        # Debugging: Ensure the order is being created
+        print(f"Order created: {order}")
+
+    # After creating the order(s), redirect as needed
     return redirect("http://localhost:5173/dresses/")
-    # # Get the cart data from the frontend (in POST request)
-    # cart_data = request.POST.get('cart_items')  # Assuming you sent cart items in the POST body
-    # order_total = sum(item['total_price'] for item in cart_data)
 
-    # # Create the order
-    # order = Order.objects.create(
-    #     user=request.user,
-    #     total_amount=order_total,
-    #     is_paid=True  # Assuming successful payment
-    # )
 
-    # # Create the order items
-    # for item in cart_data:
-    #     OrderItem.objects.create(
-    #         order=order,
-    #         item=InventoryItem.objects.get(id=item['item_id']),  
-    #         dress=DressType.objects.get(id=item['dress_id']),   
-    #         quantity=item['quantity'],
-    #         price=item['price']
-    #     )
-
-    # # Send the invoice email (details below)
-    # send_invoice_email(request.user, order)
-
+ 
 
 def send_invoice_email(user, order):
     # Create the email subject and body using a template
