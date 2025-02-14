@@ -6,6 +6,7 @@ from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 from orders.models import Order, CartList
+from django.contrib.auth.decorators import login_required
 # Create your views here.
 
 
@@ -34,7 +35,7 @@ def payment(request):
     post_body['tran_id'] = unique_transaction_id_generator()
 
 
-    post_body['success_url'] = "https://tailor-hub-backend.vercel.app/payments/goback"
+    post_body['success_url'] = f"http://127.0.0.1:8000/payments/goback?fitfinder={request.user.fitfinder.id}"
     post_body['fail_url'] =  "http://localhost:5173/cart2"  # 'https://tailor-hub-backend.vercel.app/payments/gohome' 
     post_body['cancel_url'] = 'https://tailor-hub-backend.vercel.app/payments/gohome'
 
@@ -47,7 +48,7 @@ def payment(request):
     post_body['cus_country'] = "Bangladesh"
     post_body['shipping_method'] = "NO"
     post_body['multi_card_name'] = ""
-    post_body['num_of_item'] =  45 # len(cart_data)
+    post_body['num_of_item'] = len(cart_items)
     post_body['product_name'] = "Test"
     post_body['product_category'] = "Test Category"
     post_body['product_profile'] = "general"
@@ -67,20 +68,20 @@ def gohome(request):
 
 @csrf_exempt
 def goback(request):
-    print("Inside goback view") 
-    cart_items = CartList.objects.filter(fit_finder=request.user.fitfinder)
-  
+    fitfinder_id = request.GET.get('fitfinder') 
+    cart_items = CartList.objects.filter(fit_finder=fitfinder_id) 
     
-    # Iterate over the cart items and calculate the total
+    order_instance = Order()
     for item in cart_items:
+        order_id = order_instance.generate_order_id()
+
         fabric_or_dress_price = item.fabric_or_dress.discount_price if item.fabric_or_dress.discount_price > 0 else item.fabric_or_dress.base_price
         tailor_service_price = item.tailorService.sell_price_per_unit if item.tailorService else 0
         item_total = (fabric_or_dress_price * item.fabric_or_dress_quantity) + tailor_service_price
  
-        
-        # Create the order object using the 'create' method
+         
         order = Order.objects.create(
-            order_id=unique_transaction_id_generator(),  # Generate unique order ID
+            order_id=order_id,  # Generate unique order ID
             fit_finder=item.fit_finder,                   # Link the fit_finder (user)
             fit_maker=item.fit_maker,                     # Link the fit_maker (tailor)
             fabric_OR_dress=item.fabric_or_dress,         # Link the fabric_or_dress (inventory item)
@@ -92,12 +93,8 @@ def goback(request):
             is_paid=True,                                 # Set as paid after successful payment
             order_status='Processing'                      # Update order status after successful payment
         )
-        order.save()
-        
-        # Debugging: Ensure the order is being created
-        print(f"Order created: {order}")
+    cart_items.delete()
 
-    # After creating the order(s), redirect as needed
     return redirect("http://localhost:5173/dresses/")
 
 
