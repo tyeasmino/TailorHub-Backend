@@ -37,8 +37,8 @@ def payment(request):
 
 
     post_body['success_url'] = f"http://127.0.0.1:8000/payments/goback?fitfinder={ffid}"
-    post_body['fail_url'] =  "http://localhost:5173/cart2"  # 'https://tailor-hub-backend.vercel.app/payments/gohome' 
-    post_body['cancel_url'] = 'https://tailor-hub-backend.vercel.app/payments/gohome'
+    post_body['fail_url'] =  "http://127.0.0.1:8000/payments/gohome"  # 'https://tailor-hub-backend.vercel.app/payments/gohome' 
+    post_body['cancel_url'] = "http://127.0.0.1:8000/payments/gohome" # 'https://tailor-hub-backend.vercel.app/payments/gohome'
 
     post_body['emi_option'] = 0
     post_body['cus_name'] = "tamima" #request.user.username
@@ -64,7 +64,7 @@ def payment(request):
 
 @csrf_exempt
 def gohome(request):
-    return redirect("http://localhost:5173/Checkout")
+    return redirect("http://localhost:5173/cart")
 
 
 @csrf_exempt
