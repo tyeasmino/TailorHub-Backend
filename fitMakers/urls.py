@@ -4,7 +4,8 @@ from . import views
 
 router = DefaultRouter()
 router.register(r'services', views.ServiceViewSet)
-router.register(r'fit-makers', views.FitMakerViewSet) 
+router.register(r'fit-makers', views.FitMakerViewSet, basename='fitmaker') 
+router.register(r'fit-makers-profiles', views.FitMakerProfileViewSet, basename='fitmaker-profile')
 router.register(r'categories', views.CategoryViewSet)  # Register Category
 router.register(r'dresses', views.DressViewSet)  # Register Dress
 router.register(r'dress-ratings', views.DressRatingViewSet)  # Register Dress Ratings

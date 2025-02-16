@@ -1,7 +1,7 @@
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import render
-from rest_framework import viewsets 
+from rest_framework import viewsets, pagination 
 from . import models, serializers
 from django.shortcuts import get_object_or_404
 from decimal import Decimal
@@ -14,6 +14,16 @@ class ServiceViewSet(viewsets.ModelViewSet):
     queryset = models.Service.objects.all()
     serializer_class = serializers.ServiceSerializer
 
+
+class FitMakerPagination(pagination.PageNumberPagination):
+    page_size = 5 # items per page
+    page_size_query_param = 'page_size'
+    max_page_size = 15
+
+class FitMakerProfileViewSet(viewsets.ModelViewSet):
+    queryset = models.FitMaker.objects.all()
+    serializer_class = serializers.FitMakerSerializer
+    pagination_class = FitMakerPagination
 
 class FitMakerViewSet(viewsets.ModelViewSet):
     queryset = models.FitMaker.objects.all()
